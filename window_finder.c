@@ -8,9 +8,33 @@
 
 static HWND s_lastHwnd = NULL;
 
-void WindowFinder_Update(POINT pt)
+HWND FindTargetWindow(POINT pt)
 {
     HWND hwnd = WindowFromPoint(pt);
+
+    if (!hwnd)
+        return NULL;
+
+    if (hwnd == g_overlay)
+        return NULL;
+
+    hwnd = GetAncestor(hwnd, GA_ROOTOWNER);
+
+    if (!hwnd)
+        return NULL;
+
+    if (!IsWindowVisible(hwnd))
+        return NULL;
+
+    if (IsIconic(hwnd))
+        return NULL;
+
+    return hwnd;
+}
+
+void WindowFinder_Update(POINT pt)
+{
+    HWND hwnd = FindTargetWindow(pt);
 
     if (hwnd == NULL)
         return;
@@ -22,37 +46,29 @@ void WindowFinder_Update(POINT pt)
         return;
 
     //
-    // 获取真正的顶层窗口
-    //
-    HWND root = GetAncestor(hwnd, GA_ROOT);
-
-    if (root == NULL)
-        return;
-
-    //
     // 如果窗口没变，只更新鼠标坐标即可
     //
-    if (root == s_lastHwnd)
+    if (hwnd == s_lastHwnd)
     {
         g_target.mouse = pt;
         return;
     }
 
-    s_lastHwnd = root;
+    s_lastHwnd = hwnd;
 
     RECT rc;
 
-    if (!GetWindowRect(root, &rc))
+    if (!GetWindowRect(hwnd, &rc))
         return;
 
     char title[256] = {0};
 
     GetWindowTextA(
-        root,
+        hwnd,
         title,
         sizeof(title));
 
-    g_target.hwnd = root;
+    g_target.hwnd = hwnd;
     g_target.rect = rc;
     g_target.mouse = pt;
 
@@ -60,7 +76,7 @@ void WindowFinder_Update(POINT pt)
 
     printf("\n");
     printf("----------------------------------------\n");
-    printf("HWND : %p\n", root);
+    printf("HWND : %p\n", hwnd);
     printf("Title: %s\n", title);
 
     printf(

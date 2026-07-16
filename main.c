@@ -17,6 +17,13 @@ int WINAPI WinMain(
 {
     AllocConsole();
 
+    SetProcessDpiAwarenessContext(
+        DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+
+    printf("DPI = %u\n", GetDpiForSystem());
+    UINT dpi = GetDpiForWindow(GetDesktopWindow());
+    printf("Desktop DPI = %u\n", dpi);
+
     freopen("CONOUT$","w",stdout);
 
     printf("Mouse Overlay\n");
