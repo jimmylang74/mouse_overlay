@@ -3,6 +3,7 @@
 
 #include "globals.h"
 #include "mouse_hook.h"
+#include "overlay_window.h"
 #include "window_finder.h"
 
 //
@@ -10,7 +11,11 @@
 //
 POINT g_lastMousePoint = {0};
 
+PENDING_CLICK g_pendingClick = {0};
+
 static HHOOK g_hook = NULL;
+
+static BOOL g_consumed = FALSE;
 
 static LRESULT CALLBACK MouseProc(
     int nCode,
@@ -74,6 +79,9 @@ static LRESULT CALLBACK MouseProc(
 
         case WM_RBUTTONDOWN:
 
+            g_consumed = TRUE;
+            OverlayTriggerRipple(ms->pt);
+
             if(g_debug_verbose)
             {
                 printf(
@@ -88,6 +96,8 @@ static LRESULT CALLBACK MouseProc(
 
         case WM_RBUTTONUP:
         {
+            g_consumed = TRUE;
+
             HWND hwnd = FindTargetWindow(ms->pt);
 
             if(hwnd && hwnd != g_overlay)
@@ -98,18 +108,12 @@ static LRESULT CALLBACK MouseProc(
                     char title[256] = {0};
                     GetWindowTextA(hwnd, title, sizeof(title));
 
-                    printf(
-                        "{\"handle\":\"%p\",\"title\":\"%s\",\"rect\":{\"left\":%ld,\"top\":%ld,\"right\":%ld,\"bottom\":%ld},\"mouse\":{\"x\":%ld,\"y\":%ld}}\n",
-                        hwnd,
-                        title,
-                        rc.left,
-                        rc.top,
-                        rc.right,
-                        rc.bottom,
-                        ms->pt.x,
-                        ms->pt.y);
+                    g_pendingClick.hwnd   = hwnd;
+                    g_pendingClick.rect   = rc;
+                    g_pendingClick.mouse  = ms->pt;
+                    g_pendingClick.hasPending = TRUE;
 
-                    fflush(stdout);
+                    strcpy(g_pendingClick.title, title);
                 }
             }
 
@@ -144,6 +148,12 @@ static LRESULT CALLBACK MouseProc(
 
             break;
         }
+    }
+
+    if (g_consumed && nCode >= 0)
+    {
+        g_consumed = FALSE;
+        return 1;
     }
 
     return CallNextHookEx(
@@ -188,4 +198,25 @@ void RemoveMouseHook(void)
         UnhookWindowsHookEx(g_hook);
         g_hook = NULL;
     }
+}
+
+void PrintPendingClick(void)
+{
+    if (!g_pendingClick.hasPending)
+        return;
+
+    printf(
+        "{\"handle\":\"%p\",\"title\":\"%s\",\"rect\":{\"left\":%ld,\"top\":%ld,\"right\":%ld,\"bottom\":%ld},\"mouse\":{\"x\":%ld,\"y\":%ld}}\n",
+        g_pendingClick.hwnd,
+        g_pendingClick.title,
+        g_pendingClick.rect.left,
+        g_pendingClick.rect.top,
+        g_pendingClick.rect.right,
+        g_pendingClick.rect.bottom,
+        g_pendingClick.mouse.x,
+        g_pendingClick.mouse.y);
+
+    fflush(stdout);
+
+    g_pendingClick.hasPending = FALSE;
 }

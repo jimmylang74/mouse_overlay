@@ -7,4 +7,6 @@ BOOL InstallMouseHook(void);
 
 void RemoveMouseHook(void);
 
+void PrintPendingClick(void);
+
 #endif

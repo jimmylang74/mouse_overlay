@@ -7,5 +7,7 @@ HWND CreateOverlayWindow(HINSTANCE hInstance);
 
 void OverlayUpdateRect(const RECT *rc);
 
+void OverlayTriggerRipple(POINT center);
+
 #endif
 
