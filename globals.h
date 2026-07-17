@@ -15,4 +15,6 @@ extern TARGET_WINDOW g_target;
 
 extern HWND g_overlay;
 
+extern BOOL g_debug_verbose;
+
 #endif

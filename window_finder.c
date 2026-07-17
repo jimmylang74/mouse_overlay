@@ -74,19 +74,22 @@ void WindowFinder_Update(POINT pt)
 
     strcpy(g_target.title, title);
 
-    printf("\n");
-    printf("----------------------------------------\n");
-    printf("HWND : %p\n", hwnd);
-    printf("Title: %s\n", title);
+    if(g_debug_verbose)
+    {
+        printf("\n");
+        printf("----------------------------------------\n");
+        printf("HWND : %p\n", hwnd);
+        printf("Title: %s\n", title);
 
-    printf(
-        "RECT : (%ld,%ld)-(%ld,%ld)\n",
-        rc.left,
-        rc.top,
-        rc.right,
-        rc.bottom);
+        printf(
+            "RECT : (%ld,%ld)-(%ld,%ld)\n",
+            rc.left,
+            rc.top,
+            rc.right,
+            rc.bottom);
 
-    fflush(stdout);
+        fflush(stdout);
+    }
 
     OverlayUpdateRect(&rc);
 }

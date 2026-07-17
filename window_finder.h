@@ -3,6 +3,8 @@
 
 #include <windows.h>
 
+HWND FindTargetWindow(POINT pt);
+
 void WindowFinder_Update(POINT pt);
 
 #endif

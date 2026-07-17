@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "globals.h"
 #include "mouse_hook.h"
@@ -9,36 +10,55 @@ TARGET_WINDOW g_target;
 
 HWND g_overlay=NULL;
 
+BOOL g_debug_verbose=FALSE;
+
 int WINAPI WinMain(
     HINSTANCE hInstance,
     HINSTANCE hPrev,
     LPSTR lpCmd,
     int nShow)
 {
+    if(lpCmd && strstr(lpCmd,"--debug-verbose"))
+    {
+        g_debug_verbose=TRUE;
+    }
+
     AllocConsole();
 
     SetProcessDpiAwarenessContext(
         DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
-    printf("DPI = %u\n", GetDpiForSystem());
-    UINT dpi = GetDpiForWindow(GetDesktopWindow());
-    printf("Desktop DPI = %u\n", dpi);
+    if(g_debug_verbose)
+    {
+        printf("DPI = %u\n",GetDpiForSystem());
+        UINT dpi=GetDpiForWindow(GetDesktopWindow());
+        printf("Desktop DPI = %u\n",dpi);
+    }
 
     freopen("CONOUT$","w",stdout);
 
-    printf("Mouse Overlay\n");
+    if(g_debug_verbose)
+    {
+        printf("Mouse Overlay\n");
+    }
 
     g_overlay=CreateOverlayWindow(hInstance);
 
     if(g_overlay==NULL)
     {
-        printf("CreateOverlayWindow failed\n");
+        if(g_debug_verbose)
+        {
+            printf("CreateOverlayWindow failed\n");
+        }
         return 1;
     }
 
     if(!InstallMouseHook())
     {
-        printf("InstallMouseHook failed\n");
+        if(g_debug_verbose)
+        {
+            printf("InstallMouseHook failed\n");
+        }
         return 1;
     }
 

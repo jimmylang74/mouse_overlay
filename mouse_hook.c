@@ -3,6 +3,7 @@
 
 #include "globals.h"
 #include "mouse_hook.h"
+#include "window_finder.h"
 
 //
 // overlay_window.c 会使用它
@@ -45,67 +46,101 @@ static LRESULT CALLBACK MouseProc(
 
         case WM_LBUTTONDOWN:
 
-            printf(
-                "Left Down (%ld,%ld)\n",
-                ms->pt.x,
-                ms->pt.y);
+            if(g_debug_verbose)
+            {
+                printf(
+                    "Left Down (%ld,%ld)\n",
+                    ms->pt.x,
+                    ms->pt.y);
 
-            fflush(stdout);
+                fflush(stdout);
+            }
 
             break;
 
         case WM_LBUTTONUP:
 
-            printf(
-                "Left Up (%ld,%ld)\n",
-                ms->pt.x,
-                ms->pt.y);
+            if(g_debug_verbose)
+            {
+                printf(
+                    "Left Up (%ld,%ld)\n",
+                    ms->pt.x,
+                    ms->pt.y);
 
-            fflush(stdout);
+                fflush(stdout);
+            }
 
             break;
 
         case WM_RBUTTONDOWN:
 
-            printf(
-                "Right Down (%ld,%ld)\n",
-                ms->pt.x,
-                ms->pt.y);
+            if(g_debug_verbose)
+            {
+                printf(
+                    "Right Down (%ld,%ld)\n",
+                    ms->pt.x,
+                    ms->pt.y);
 
-            fflush(stdout);
+                fflush(stdout);
+            }
 
             break;
 
         case WM_RBUTTONUP:
+        {
+            HWND hwnd = FindTargetWindow(ms->pt);
 
-            printf(
-                "Right Up (%ld,%ld)\n",
-                ms->pt.x,
-                ms->pt.y);
+            if(hwnd && hwnd != g_overlay)
+            {
+                RECT rc;
+                if(GetWindowRect(hwnd, &rc))
+                {
+                    char title[256] = {0};
+                    GetWindowTextA(hwnd, title, sizeof(title));
 
-            fflush(stdout);
+                    printf(
+                        "{\"handle\":\"%p\",\"title\":\"%s\",\"rect\":{\"left\":%ld,\"top\":%ld,\"right\":%ld,\"bottom\":%ld},\"mouse\":{\"x\":%ld,\"y\":%ld}}\n",
+                        hwnd,
+                        title,
+                        rc.left,
+                        rc.top,
+                        rc.right,
+                        rc.bottom,
+                        ms->pt.x,
+                        ms->pt.y);
+
+                    fflush(stdout);
+                }
+            }
 
             break;
+        }
 
         case WM_MBUTTONDOWN:
 
-            printf(
-                "Middle Down (%ld,%ld)\n",
-                ms->pt.x,
-                ms->pt.y);
+            if(g_debug_verbose)
+            {
+                printf(
+                    "Middle Down (%ld,%ld)\n",
+                    ms->pt.x,
+                    ms->pt.y);
 
-            fflush(stdout);
+                fflush(stdout);
+            }
 
             break;
 
         case WM_MBUTTONUP:
 
-            printf(
-                "Middle Up (%ld,%ld)\n",
-                ms->pt.x,
-                ms->pt.y);
+            if(g_debug_verbose)
+            {
+                printf(
+                    "Middle Up (%ld,%ld)\n",
+                    ms->pt.x,
+                    ms->pt.y);
 
-            fflush(stdout);
+                fflush(stdout);
+            }
 
             break;
         }
@@ -128,14 +163,20 @@ BOOL InstallMouseHook(void)
 
     if (g_hook == NULL)
     {
-        printf(
-            "SetWindowsHookEx failed : %lu\n",
-            GetLastError());
+        if(g_debug_verbose)
+        {
+            printf(
+                "SetWindowsHookEx failed : %lu\n",
+                GetLastError());
+        }
 
         return FALSE;
     }
 
-    printf("Mouse Hook Installed.\n");
+    if(g_debug_verbose)
+    {
+        printf("Mouse Hook Installed.\n");
+    }
 
     return TRUE;
 }
